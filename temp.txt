@@ -1,0 +1,70 @@
+def game():
+    pre_hint1, pre_hint2 = -1, -1
+    last = None
+    drawing = False
+    
+    while True:
+        # Lấp đầy cửa sổ với màu trắng
+        screen.fill(WHITE)
+
+        while is_impossible() == -1:
+            print('Impossible')
+            screen.blit(text1, text_rect1)
+            pygame.display.flip()
+            pygame.time.delay(500)
+            screen.fill(WHITE)
+            pygame.display.flip()
+            screen.blit(text2, text_rect2)
+            pygame.display.flip()
+            pygame.time.delay(1000)
+            screen.fill(WHITE)
+            pygame.display.flip()
+            suffle()
+        # vẽ bàn pikachu
+        hint1, hint2 = is_impossible()
+        if hint1 != pre_hint1 and hint2 != pre_hint2:
+            print('Hint :', hint1, hint2)
+            pre_hint1, pre_hint2 = hint1, hint2
+        x = (700 - ROW * IMAGE_SIZE[0]) // 2
+        for i in range(ROW):
+            y = (1200 - COL * IMAGE_SIZE[1]) // 2
+            for j in range(COL):
+                if grid[i + 1][j + 1] != -1:
+                    img = pygame.image.load(path[grid[i + 1][j + 1]])
+                    screen.blit(img, (y, x))
+                    if last == (i + 1, j + 1):
+                        shadow_offset = 5  # Dịch chuyển để tạo hiệu ứng đậm
+                        screen.blit(img, (y + shadow_offset, x + shadow_offset))
+                y += IMAGE_SIZE[1]
+            x += IMAGE_SIZE[0]
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  # Nếu người dùng đóng cửa sổ
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # print('Mouse :', event.pos)
+                for i in range(ROW):
+                    for j in range(COL):
+                        if grid_button[i][j].collidepoint(event.pos):
+                            if last is None:
+                                last = (i + 1, j + 1)
+                                # print('1 choose :', last)
+                            else:
+                                if (i + 1, j + 1) == last:
+                                    last = None
+                                    break
+                                if grid[i + 1][j + 1] == grid[last[0]][last[1]]:
+                                    # print('2 choose :', (i + 1, j + 1))
+                                    if is_valid((i + 1, j + 1), last, True):
+                                        grid[i + 1][j + 1], grid[last[0]][last[1]] = -1, -1
+                                        drawing = True
+                                last = None
+
+        # Cập nhật cửa sổ
+        pygame.display.flip()
+        if drawing == True:
+            pygame.time.delay(500)
+            drawing = False
+        if is_winning():
+            return
+
